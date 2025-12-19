@@ -49,6 +49,63 @@ static uint8_t backbuffer[WIDTH * HEIGHT];
 #define COL_BALL 0xE0
 #define COL_SCORE 0x7F
 
+/* ===== 7-seg displays (active-low) ===== */
+#define HEX0 (*(volatile uint8_t *)0x04000050u)
+#define HEX1 (*(volatile uint8_t *)0x04000060u)
+#define HEX2 (*(volatile uint8_t *)0x04000070u)
+#define HEX3 (*(volatile uint8_t *)0x04000080u)
+#define HEX4 (*(volatile uint8_t *)0x04000090u)
+#define HEX5 (*(volatile uint8_t *)0x040000A0u)
+
+static inline void set_display_byte(int n, uint8_t v)
+{
+  switch (n)
+  {
+  case 0:
+    HEX0 = v;
+    break;
+  case 1:
+    HEX1 = v;
+    break;
+  case 2:
+    HEX2 = v;
+    break;
+  case 3:
+    HEX3 = v;
+    break;
+  case 4:
+    HEX4 = v;
+    break;
+  case 5:
+    HEX5 = v;
+    break;
+  default:
+    break;
+  }
+}
+
+/* 7-seg patterns for 0..9 (active-high), classic */
+static const uint8_t DIGIT_AH[10] = {
+    0x3F, 0x06, 0x5B, 0x4F, 0x66,
+    0x6D, 0x7D, 0x07, 0x7F, 0x6F};
+
+static inline uint8_t seg_active_low(uint8_t ah)
+{
+  /* invert segments, keep DP off (bit7 = 1) */
+  return (uint8_t)((~ah & 0x7F) | 0x80);
+}
+
+static inline void show_digit(int disp, int d)
+{
+  if (d < 0)
+    d = 0;
+  if (d > 9)
+    d = 9;
+  set_display_byte(disp, seg_active_low(DIGIT_AH[d]));
+}
+
+static volatile bool score_dirty = true; /* uppdatera vid start */
+
 typedef struct
 {
   int x, y;
@@ -190,11 +247,13 @@ static void move_ball(ball_t *b)
   if (b->x <= 0)
   {
     score_right++;
+    score_dirty = true;
     reset_ball(1);
   }
   else if (b->x >= COLS - 1)
   {
     score_left++;
+    score_dirty = true;
     reset_ball(-1);
   }
 
@@ -202,7 +261,21 @@ static void move_ball(ball_t *b)
     gameon = false;
 }
 
+static void update_scoreboard(void)
+{
+  /* 
+     HEX5 = vänster poäng
+     HEX0 = höger poäng
+     HEX1..HEX4 släckta
+  */
+  show_digit(5, score_left);
+  show_digit(0, score_right);
 
+  set_display_byte(1, 0xFF);
+  set_display_byte(2, 0xFF);
+  set_display_byte(3, 0xFF);
+  set_display_byte(4, 0xFF);
+}
 
 /* ===== Render ===== */
 static void render(void)
@@ -232,8 +305,6 @@ static void render(void)
     /* big rectangle in middle */
     fill_cell_rect(10, 8, 12, 8, 0x00);
     fill_cell_rect(11, 9, 10, 6, 0xFF);
-
-
   }
 
   flip_buffers();
@@ -291,6 +362,12 @@ void handle_interrupt(unsigned int cause)
       }
     }
 
+    if (score_dirty)
+    {
+      update_scoreboard();
+      score_dirty = false;
+    }
+
     render();
   }
 }
@@ -298,7 +375,13 @@ void handle_interrupt(unsigned int cause)
 void labinit(void)
 {
   init_game();
-  render();          /* draw first frame immediately */
+  render(); /* draw first frame immediately */
+
+  for (int i = 0; i < 6; i++)
+    set_display_byte(i, 0xFF);
+  update_scoreboard();
+  score_dirty = false;
+
   timer_init_60hz(); /* start timer */
   enable_interrupt();
 }
