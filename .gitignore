@@ -1,0 +1,14 @@
+# Objektfiler
+*.o
+
+# Binärer
+*.elf
+*.bin
+*.txt
+
+# Arkiv
+*.a
+
+# Eventuella temporära filer
+*~
+
