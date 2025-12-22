@@ -248,13 +248,13 @@ static void move_ball(ball_t *b)
   {
     score_right++;
     score_dirty = true;
-    reset_ball(1);
+    reset_ball(-1);
   }
   else if (b->x >= COLS - 1)
   {
     score_left++;
     score_dirty = true;
-    reset_ball(-1);
+    reset_ball(1);
   }
 
   if (score_left >= WIN_SCORE || score_right >= WIN_SCORE)
