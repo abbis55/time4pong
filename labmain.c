@@ -43,7 +43,7 @@ static uint8_t backbuffer[WIDTH * HEIGHT];
 
 #define WIN_SCORE 5
 
-/* Colors (8-bit palette-ish; values just need to differ) */
+/* Colors (8-bit palette-ish) */
 #define COL_BG 0x03
 #define COL_FG 0xFF
 #define COL_BALL 0xE0
@@ -84,7 +84,7 @@ static inline void set_display_byte(int n, uint8_t v)
   }
 }
 
-/* 7-seg patterns for 0..9 (active-high), classic */
+/* 7-seg patterns for 0..9 (active-high) */
 static const uint8_t DIGIT_AH[10] = {
     0x3F, 0x06, 0x5B, 0x4F, 0x66,
     0x6D, 0x7D, 0x07, 0x7F, 0x6F};
@@ -127,7 +127,7 @@ static volatile bool gameon = true;
 static ball_t ball;
 static paddle_t leftp, rightp;
 
-/* ===== Drawing helpers (draw into backbuffer) ===== */
+/* ===== Drawing helpers (draw into backbuffer) === */
 static inline void set_pixel(int x, int y, uint8_t c)
 {
   if ((unsigned)x >= WIDTH || (unsigned)y >= HEIGHT)
@@ -159,19 +159,12 @@ static void fill_cell_rect(int cx, int cy, int cw, int ch, uint8_t c)
 
 static void flip_buffers(void)
 {
-  /* Copy whole frame in one go -> no flicker */
+  /* Copy whole frame at once, no flicker */
   for (int i = 0; i < WIDTH * HEIGHT; i++)
     VGA[i] = backbuffer[i];
 }
 
 /* ===== Game logic ===== */
-static void reset_ball(int dir)
-{
-  ball.x = COLS / 2;
-  ball.y = ROWS / 2;
-  ball.dx = dir; /* +1 to the right, -1 to the left */
-  ball.dy = (ball.dy == 0) ? 1 : ball.dy;
-}
 
 static void init_game(void)
 {
@@ -191,6 +184,15 @@ static void init_game(void)
   ball.dx = 1;
   ball.dy = 1;
 }
+
+static void reset_ball(int dir)
+{
+  ball.x = COLS / 2;
+  ball.y = ROWS / 2;
+  ball.dx = dir; /* +1 to the right, -1 to the left */
+  ball.dy = (ball.dy == 0) ? 1 : ball.dy;
+}
+
 
 static void clamp_paddle(paddle_t *p)
 {
@@ -393,6 +395,6 @@ int main(void)
   while (1)
   {
     /* game runs in interrupts */
-    /* restart on gameover later: add a button read here */
+    
   }
 }
