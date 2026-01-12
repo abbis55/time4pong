@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/* Course-provided */
+/* From course */
 extern void enable_interrupt(void);
 
-/* ===== Timer (Intel Interval Timer @ 0x04000020) ===== */
+/* == Timer (Intel Interval Timer @ 0x04000020) ===== */
 #define TMR_BASE 0x04000020u
 #define TMR_STATUS (*(volatile uint32_t *)(TMR_BASE + 0x00))  /* bit0=TO; write-to-clear */
 #define TMR_CONTROL (*(volatile uint32_t *)(TMR_BASE + 0x04)) /* bit0 ITO, bit1 CONT, bit2 START */
@@ -44,10 +44,10 @@ static uint8_t backbuffer[WIDTH * HEIGHT];
 #define WIN_SCORE 5
 
 /* Colors (8-bit palette-ish) */
-#define COL_BG 0x03
+#define COL_BG 0x14
 #define COL_FG 0xFF
 #define COL_BALL 0xE0
-#define COL_SCORE 0x7F
+#define COL_SCORE 0x03
 
 /* ===== 7-seg displays (active-low) ===== */
 #define HEX0 (*(volatile uint8_t *)0x04000050u)
@@ -221,7 +221,7 @@ static void collide_with_paddle(ball_t *b, const paddle_t *p)
     {
       b->dx = -b->dx;
 
-      /* tiny variation so it doesn't get "stuck" */
+      /* a little variation so it doesn't get "stuck" */
       if (b->y == p->y || b->y == p->y + p->h - 1)
         b->dy = -b->dy;
     }
@@ -279,7 +279,7 @@ static void update_scoreboard(void)
   set_display_byte(4, 0xFF);
 }
 
-/* ===== Render ===== */
+/* ===== Render === */
 static void render(void)
 {
   clear_backbuffer(COL_BG);
